@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ci-Aria2百度云盘增强版
 // @namespace    https://github.com/CiChui/Ci-Aria2BDY/
-// @version      1.0.0
+// @version      1.0.1
 // @description  百度网盘文件直链提取, 支持一键发送至Aria2进行下载
 // @author       CiChui
 // @license      MIT
