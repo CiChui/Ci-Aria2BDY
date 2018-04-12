@@ -24,7 +24,7 @@
 // @grant        GM_xmlhttpRequest
 // @require      https://cdn.bootcss.com/jquery/1.7.1/jquery.min.js
 // @require      https://cdn.bootcss.com/clipboard.js/1.5.16/clipboard.min.js
-// @require      http://apps.bdimg.com/libs/jquery.cookie/1.4.1/jquery.cookie.min.js
+// @require      https://apps.bdimg.com/libs/jquery.cookie/1.4.1/jquery.cookie.min.js
 // ==/UserScript==
 
 (function(require, define, Promise) {
@@ -292,7 +292,7 @@
                 if (!aria2token) {
                     var aria2token = "";
                 }
-                var text = '<label for="txt">Aria2服务器地址: </label><input type="text" id="aria2addr" style="white-space: nowrap;" value="' + aria2addr + '" /><br><br><label for="txt">Aria2服务器端口: </label><input type="text" id="aria2port" style="white-space: nowrap;" value="' + aria2port + '" /><br><br><label for="txt">Aria2-RPC接口名: </label><input type="text" id="aria2rpc" style="white-space: nowrap;" value="' + aria2rpc + '" /><br><br><label for="txt">Aria2服务器令牌: </label><input type="text" id="aria2token" style="white-space: nowrap;" value="' + aria2token + '" />';
+                var text = '<label for="txt">Aria2服务器地址: </label><input type="text" id="aria2addr" placeholder="SSL请地址前加https://" style="white-space: nowrap;" value="' + aria2addr + '" /><br><br><label for="txt">Aria2服务器端口: </label><input type="text" id="aria2port" style="white-space: nowrap;" value="' + aria2port + '" /><br><br><label for="txt">Aria2-RPC接口名: </label><input type="text" id="aria2rpc" style="white-space: nowrap;" value="' + aria2rpc + '" /><br><br><label for="txt">Aria2服务器令牌: </label><input type="text" id="aria2token" style="white-space: nowrap;" value="' + aria2token + '" />';
                 var dialog = ctx.ui.confirm({
                     title: 'CiAria2-下载设置',
                     body: text,
