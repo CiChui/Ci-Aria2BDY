@@ -16,6 +16,7 @@
 // @match        *://yun.baidu.com/share/link?*
 // @match        *://eyun.baidu.com/s/*
 // @match        *://eyun.baidu.com/enterprise/*
+// @match        *://aria2.me/webui-aria2/*
 // @run-at       document-end
 // @grant        unsafeWindow
 // @grant        GM_addStyle
@@ -23,10 +24,34 @@
 // @grant        GM_xmlhttpRequest
 // @require      https://cdn.bootcss.com/jquery/1.7.1/jquery.min.js
 // @require      https://cdn.bootcss.com/clipboard.js/1.5.16/clipboard.min.js
+// @require      http://apps.bdimg.com/libs/jquery.cookie/1.4.1/jquery.cookie.min.js
 // ==/UserScript==
 
 (function(require, define, Promise) {
     'use strict';
+    //获取URL参数
+    var request = function (name,encode) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null){
+            if (encode == "unescape") {
+                return unescape(r[2]);
+            }
+            return decodeURI(r[2]);
+        }
+        return null;
+    };
+    var rpc = request("rpc");
+    if(window.location.host == "aria2.me" && rpc)
+    {
+        // var keys = {
+        //     glutton:{type:'localstorage',key:'glutton_server_history',value:rpc},
+        //     webuiAria:{type:'cookie',key:'aria2conf',value:rpc}
+        // };
+        $.cookie("aria2conf",rpc);
+        window.location.href = "/webui-aria2";
+        return;
+    }
     unsafeWindow.api = function(data, callback) {
         var ctx = require('system-core:context/context.js').instanceForSystem;
         if (data === undefined) data = new Object;
@@ -128,7 +153,6 @@
             });
         }
     };
-
     function showError(msg) {
         GM_addStyle('#errorDialog{position: fixed;top: 76.5px; bottom: auto; left: 423px; right: auto;background: #fff;border: 1px solid #ced1d9;border-radius: 4px;box-shadow: 0 0 3px #ced1d9;color: black;word-break: break-all;display: block;width: 520px;padding: 10px 20px;z-index: 9999;}#errorDialog h3{border-bottom: 1px solid #ced1d9;font-size: 1.5em;font-weight: bold;}');
         var $;
@@ -225,7 +249,21 @@
         });
 
         var menu = [{
-            title: 'Aria2下载设置',
+            title: 'CiAria2-下载',
+            'click': function() {
+                var fetchDownLinks = require('Ci-Aria2BDY:fetchDownLinks.js');
+                fetchDownLinks.start(ctx, dServ);
+            },
+            availableProduct: ['pan', 'share', 'enterprise']
+        }, {
+            title: 'CiAria2-压缩下载',
+            'click': function() {
+                var fetchDownLinks = require('Ci-Aria2BDY:fetchDownLinks.js');
+                fetchDownLinks.start(ctx, dServ, true);
+            },
+            availableProduct: ['pan', 'share', 'enterprise']
+        },{
+            title: 'CiAria2-下载设置',
             'click': function() {
                 var clipboard = new Clipboard('.btn');
                 clipboard.on('success',
@@ -256,44 +294,29 @@
                 }
                 var text = '<label for="txt">Aria2服务器地址: </label><input type="text" id="aria2addr" style="white-space: nowrap;" value="' + aria2addr + '" /><br><br><label for="txt">Aria2服务器端口: </label><input type="text" id="aria2port" style="white-space: nowrap;" value="' + aria2port + '" /><br><br><label for="txt">Aria2-RPC接口名: </label><input type="text" id="aria2rpc" style="white-space: nowrap;" value="' + aria2rpc + '" /><br><br><label for="txt">Aria2服务器令牌: </label><input type="text" id="aria2token" style="white-space: nowrap;" value="' + aria2token + '" />';
                 var dialog = ctx.ui.confirm({
-                    title: 'Aria2下载设置',
+                    title: 'CiAria2-下载设置',
                     body: text,
                     sureText: '保存设置',
                     onClose: function() {
                         //clipboard && clipboard.destory && clipboard.destroy();
                     }
                 });
-                //alert(urls);
+                //var jsonrpc = '{"host":"'+aria2addr.replace("https://","").replace("http://","")+'","path":"/'+aria2rpc+'","port":'+aria2port+',"encrypt":'+(aria2addr.indexOf("https://") >= 0)+',"auth":{"token":"'+aria2token+'"},"directURL":""}';
+                //alert(jsonrpc);
                 dialog.buttonIns[0].dom.attr({
-                    'href': 'javascript:var aria2addr = document.getElementById("aria2addr").value;var aria2port = document.getElementById("aria2port").value;var aria2rpc = document.getElementById("aria2rpc").value;var aria2token = document.getElementById("aria2token").value;if (window.localStorage) {localStorage.setItem("aria2addr", aria2addr);localStorage.setItem("aria2port", aria2port);localStorage.setItem("aria2rpc", aria2rpc);localStorage.setItem("aria2token", aria2token);} else {Cookie.write("aria2addr", aria2addr);Cookie.write("aria2port", aria2port);Cookie.write("aria2rpc", aria2rpc);Cookie.write("aria2token", aria2token);};',
+                    'href': 'javascript:var aria2addr = document.getElementById("aria2addr").value;var aria2port = document.getElementById("aria2port").value;var aria2rpc = document.getElementById("aria2rpc").value;var aria2token = document.getElementById("aria2token").value;var jsonrpc = \'{"host":"\' + aria2addr.replace("https://", "").replace("http://", "") + \'","path":"/\' + aria2rpc + \'","port":\' + aria2port + \',"encrypt":\' + (aria2addr.indexOf("https://") >= 0) + \',"auth":{"token":"\' + aria2token + \'"},"directURL":""}\'; if (window.localStorage) {localStorage.setItem("aria2addr", aria2addr);localStorage.setItem("aria2port", aria2port);localStorage.setItem("aria2rpc", aria2rpc);localStorage.setItem("jsonrpc", jsonrpc);} else {Cookie.write("aria2addr", aria2addr);Cookie.write("aria2port", aria2port);Cookie.write("aria2rpc", aria2rpc);Cookie.write("aria2token", aria2token);};',
                     'data-clipboard-action': 'copy',
                     'data-clipboard-target': '#aria2addr'
                 }).addClass('btn').off();
             },
             availableProduct: ['pan', 'share', 'enterprise']
-        }, {
-            title: 'CiAria2-下载',
+        },{
+            title: 'CiAria2-下载管理',
             'click': function() {
-                var fetchDownLinks = require('Ci-Aria2BDY:fetchDownLinks.js');
-                fetchDownLinks.start(ctx, dServ);
-            },
-            availableProduct: ['pan', 'share', 'enterprise']
-        }, {
-            title: 'CiAria2-压缩下载',
-            'click': function() {
-                var fetchDownLinks = require('Ci-Aria2BDY:fetchDownLinks.js');
-                fetchDownLinks.start(ctx, dServ, true);
+                window.open("http://aria2.me/webui-aria2?rpc="+localStorage.getItem("jsonrpc"));
             },
             availableProduct: ['pan', 'share', 'enterprise']
         }
-                    //,{
-                    //	title: 'CiAria2-下载管理',
-                    //	'click': function() {
-                    //		var window_new = window.open("http://" + aria2addr + ":" + aria2port + "");
-                    //		//GM.openInTab('"http://' + aria2addr + ':' + aria2port'"');
-                    //	},
-                    //	availableProduct: ['pan', 'share', 'enterprise']
-                    //}
                    ];
 
         var exDlBtnConfig = {
