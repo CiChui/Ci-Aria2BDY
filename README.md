@@ -1,4 +1,5 @@
 # Ci-Aria2BDY  
+
 基于CX-百度云盘脚本修改
 可用于远程下载百度云盘共享文件至路由器存储设备，或家庭NAS存储设备，或调用本地Aria2加速下载文件到本地磁盘
 1.增加Aria2远程下载支持
@@ -25,7 +26,5 @@ Aria2客户端使用教程(Ci-Aria2BDY链接: https://pan.baidu.com/s/1x6Ln3z4M6
 
 
 引用来源，你也可以自行下载
-Aria2
-下载地址：https://github.com/aria2/aria2/releases
-Aria2配置文件
-下载地址：http://www.pc6.com/softview/SoftView_506016.html
+Aria2下载地址：https://github.com/aria2/aria2/releases
+Aria2配置下载地址：http://www.pc6.com/softview/SoftView_506016.html
