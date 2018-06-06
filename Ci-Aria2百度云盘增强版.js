@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Ci-Aria2百度云盘增强版
 // @namespace    https://github.com/CiChui/Ci-Aria2BDY/
-// @version      1.2.0
+// @version      1.2.2
 // @description  百度网盘文件直链提取, 支持一键发送至Aria2进行下载,支持路由器远程下载，支持NAS设备远程下载
 // @author       CiChui
 // @license      MIT
 // @supportURL   https://github.com/CiChui/Ci-Aria2BDY/issues
 // @date         04/11/2018
-// @modified     04/14/2018
+// @modified     06/06/2018
 // @match        *://pan.baidu.com/disk/home*
 // @match        *://yun.baidu.com/disk/home*
 // @match        *://pan.baidu.com/s/*
@@ -97,14 +97,14 @@
         }
         var aria2token  = window.localStorage ? localStorage.getItem("aria2token") : Cookie.read("aria2token");
         if(!aria2token){
+            aria2token = "";
             if (window.localStorage) {
-                localStorage.setItem("", aria2token);
+                localStorage.setItem("aria2token", aria2token);
             } else {
-                Cookie.write("", aria2token);
+                Cookie.write("aria2token", aria2token);
             }
-        }else{
-            aria2token = "token:"+aria2token;
         }
+        aria2token = "token:"+aria2token;
         //$(data.params).unshift(aria2token);
         data.params.splice(0,0,aria2token);
         ctx.ui.tip({ mode: 'success', msg: '正在发送任务到' + aria2addr + ':' + aria2port + '/' + aria2rpc });
@@ -301,7 +301,7 @@
                     aria2token = "";
                 }
                 var uitype = window.localStorage ? localStorage.getItem("uitype") : Cookie.read("uitype");
-                if (!aria2token) {
+                if (!uitype) {
                     uitype = "http://aria2.me/aria-ng?rpc=";
                 }
                 var str=uitype.match(/([^\/]*\/){3}([^\/]*)/)[2];
@@ -579,6 +579,8 @@
             $(unsafeWindow).on('load', function() {
                 reject('downloadManager.js');
             });
+
+			resolve();
             require.async(prefix + 'download/service/downloadManager.js', function(dm) {
                 dm.MODE_PRE_INSTALL = dm.MODE_PRE_DOWNLOAD;
                 resolve();
@@ -601,7 +603,8 @@
             $(unsafeWindow).on('load', function() {
                 reject('downloadDirectService.js');
             });
-            require.async(prefix + 'download/service/downloadDirectService.js', function(dDS) {
+			resolve();
+            /*require.async(prefix + 'download/service/downloadDirectService.js', function(dDS) {
                 var $preDlFrame = null;
                 var _ = dDS.straightforwardDownload;
                 if (typeof _ !== 'function') return;
@@ -618,7 +621,7 @@
                     _.apply(dDS, arguments);
                 };
                 resolve();
-            });
+            });*/
         });
         Promise.all([dmPromise, gjcPromise, ddsPromise]).then(function() {
             try {
