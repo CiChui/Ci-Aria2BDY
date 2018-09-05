@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Ci-Aria2百度云盘增强版
 // @namespace    https://github.com/CiChui/Ci-Aria2BDY/
-// @version      1.2.2
-// @description  百度网盘文件直链提取, 支持一键发送至Aria2进行下载,支持路由器远程下载，支持NAS设备远程下载
+// @version      1.2.3
+// @description  百度云极速下载，百度网盘文件直链提取， 支持一键发送至Aria2进行下载，支持路由器远程下载，支持NAS设备远程下载
 // @author       CiChui
 // @license      MIT
 // @supportURL   https://github.com/CiChui/Ci-Aria2BDY/issues
 // @date         04/11/2018
-// @modified     06/06/2018
+// @modified     09/05/2018
 // @match        *://pan.baidu.com/disk/home*
 // @match        *://yun.baidu.com/disk/home*
 // @match        *://pan.baidu.com/s/*
@@ -26,7 +26,6 @@
 // @require      https://cdn.bootcss.com/jquery/1.7.1/jquery.min.js
 // @require      https://cdn.bootcss.com/clipboard.js/1.5.16/clipboard.min.js
 // @require      https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js
-// @require      https://cdn.bootcss.com/Base64/1.0.1/base64.min.js
 // ==/UserScript==
 
 (function(require, define, Promise) {
@@ -44,13 +43,10 @@
         return null;
     };
     var rpc = request("rpc");
-    rpc = window.atob(rpc||"");
     if(window.location.host == "aria2.me" && rpc)
     {
-        // var keys = {
-        //     glutton:{type:'localstorage',key:'glutton_server_history',value:rpc},
-        //     webuiAria:{type:'cookie',key:'aria2conf',value:rpc}
-        // };
+        rpc = unescape(rpc);
+        rpc = window.atob(rpc||"");
         if(window.location.href.indexOf("webui-aria2")>0)
         {
             $.cookie("aria2conf",rpc);
@@ -266,6 +262,7 @@
         }, {
             title: 'CiAria2-压缩下载',
             'click': function() {
+                alert("只能选择单个文件压缩下载，或指定文件夹下载！\n此功能极不稳定，后续版本中不再维护。")
                 var fetchDownLinks = require('Ci-Aria2BDY:fetchDownLinks.js');
                 fetchDownLinks.start(ctx, dServ, true);
             },
@@ -298,7 +295,7 @@
                 }
                 var aria2token = window.localStorage ? localStorage.getItem("aria2token") : Cookie.read("aria2token");
                 if (!aria2token) {
-                    aria2token = "";
+                    aria2token = "token";
                 }
                 var uitype = window.localStorage ? localStorage.getItem("uitype") : Cookie.read("uitype");
                 if (!uitype) {
@@ -331,7 +328,7 @@
                     'var jsonrpc=\'{"host":"\' + aria2addr.replace("https://", "").replace("http://", "") + \'","path":"/\' + aria2rpc + \'","port":\' + aria2port + \',"encrypt":\' + (aria2addr.indexOf("https://") >= 0) + \',"auth":{"token":"\' + aria2token + \'"},"directURL":""}\';'+
                     //'if(document.getElementById("uitype").options[document.getElementById("uitype").options.selectedIndex].text=="Aria2-WebUI")'+
                     'if(document.getElementById("uitype").options[document.getElementById("uitype").options.selectedIndex].text=="Aria-NG")'+
-                        'jsonrpc = \'{"language":"zh_CN","title":"${downspeed}, ${upspeed} - ${title}","titleRefreshInterval":5000,"browserNotification":false,"rpcAlias":"Ci-Aria2BDY","rpcHost":"\'+JSON.parse(jsonrpc).host+\'","rpcPort":"\'+JSON.parse(jsonrpc).port+\'","rpcInterface":"jsonrpc","protocol":"\'+(JSON.parse(jsonrpc).encrypt?\'https\':\'http\')+\'","httpMethod":"POST","secret":"\'+window.btoa(JSON.parse(jsonrpc).auth.token)+\'","extendRpcServers":[],"globalStatRefreshInterval":1000,"downloadTaskRefreshInterval":1000,"afterCreatingNewTask":"task-list"}\';'+
+                    'jsonrpc = \'{"language":"zh_CN","title":"${downspeed}, ${upspeed} - ${title}","titleRefreshInterval":5000,"browserNotification":false,"rpcAlias":"Ci-Aria2BDY","rpcHost":"\'+JSON.parse(jsonrpc).host+\'","rpcPort":"\'+JSON.parse(jsonrpc).port+\'","rpcInterface":"jsonrpc","protocol":"\'+(JSON.parse(jsonrpc).encrypt?\'https\':\'http\')+\'","httpMethod":"POST","secret":"\'+window.btoa(JSON.parse(jsonrpc).auth.token)+\'","extendRpcServers":[],"globalStatRefreshInterval":1000,"downloadTaskRefreshInterval":1000,"afterCreatingNewTask":"task-list"}\';'+
                     //'else if(){}'+
                     'if (window.localStorage) {'+
                     'localStorage.setItem("aria2addr", aria2addr);'+
@@ -358,7 +355,7 @@
             'click': function() {
                 var uitype=localStorage.getItem("uitype"),address=localStorage.getItem("uitype")+window.btoa(uitype);
                 if(uitype && address){
-                window.open(uitype+window.btoa(localStorage.getItem(uitype)));}
+                    window.open(uitype+window.btoa(localStorage.getItem(uitype)));}
                 else{
                     ctx.ui.tip({ mode: 'caution', msg: '请确认下载设置！'});
                 }
@@ -413,13 +410,13 @@
                 [].push.apply(foldersList, filesList);
             }
 
-            var requestMethod;
+            var requestMethod,yunData;
             if (currentProduct === 'pan') {
                 requestMethod = function(e, cb) {
                     dServ.getDlinkPan(dServ.getFsidListData(e), allZip ? 'batch' : e.isdir === 1 ? 'batch' : 'nolimit', cb, undefined, undefined, 'POST');
                 };
             } else if (currentProduct === 'share') {
-                var yunData = require('disk-share:widget/data/yunData.js').get();
+                yunData = require('disk-share:widget/data/yunData.js').get();
                 requestMethod = function(e, cb) {
                     dServ.getDlinkShare({
                         share_id: yunData.shareid,
@@ -431,7 +428,7 @@
                     }, cb);
                 };
             } else {
-                var yunData = require('page-common:widget/data/yunData.js').get();
+                yunData = require('page-common:widget/data/yunData.js').get();
                 requestMethod = function(e, cb) {
                     dServ.getDlinkShare({
                         share_id: yunData.shareid,
@@ -456,7 +453,7 @@
             });
             Promise.all(promises).then(function(result) {
                 ctx.ui.hideTip();
-                var dlinks = [];
+                var dlinks = [],filenamearr = [];
                 var needToRetry = result.filter(function(e) {
                     return e.errno !== 0;
                 });
@@ -478,6 +475,9 @@
                     } else {
                         [].push.apply(dlinks, (e.dlink || e.list || []).map(function(e) {
                             return e.dlink;
+                        }));
+                        [].push.apply(filenamearr, (e.server_filename || e.list || []).map(function(e) {
+                            return e.server_filename;
                         }));
                     }
                 });
@@ -518,7 +518,7 @@
                 }).forEach(function(e) {
                     if (e.isdir === 1) {
                         //alert('isdir');
-                        var filenamearr = [];
+                        filenamearr = [];
                         //alert('nodir');
                         for (var i = 0; i < foldersList.length; i++) {
                             var fname = foldersList[i]['server_filename'];
@@ -528,12 +528,13 @@
                         }
                         filenames = filenamearr.join('|');
                     } else {
-                        var filenamearr = [];
-                        for (var i = 0; i < filesList.length; i++) {
-                            var fname = filesList[i]['server_filename'];
-                            var ffname = fname.replace(/|/g, '');
-                            filenamearr.push(ffname);
-                        }
+                        //                         if(filenamearr.length===0){
+                        //                          filenamearr = [];
+                        //                          for (var a = 0; a < filesList.length; a++) {
+                        //                              var ffffname = filesList[a]['server_filename'].replace(/|/g, '');
+                        //                              filenamearr.push(ffffname);
+                        //                          }
+                        //                         }
                         filenames = filenamearr.join('|');
                     }
                 });
@@ -580,7 +581,7 @@
                 reject('downloadManager.js');
             });
 
-			resolve();
+            resolve();
             require.async(prefix + 'download/service/downloadManager.js', function(dm) {
                 dm.MODE_PRE_INSTALL = dm.MODE_PRE_DOWNLOAD;
                 resolve();
@@ -603,7 +604,7 @@
             $(unsafeWindow).on('load', function() {
                 reject('downloadDirectService.js');
             });
-			resolve();
+            resolve();
             /*require.async(prefix + 'download/service/downloadDirectService.js', function(dDS) {
                 var $preDlFrame = null;
                 var _ = dDS.straightforwardDownload;
